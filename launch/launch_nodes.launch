@@ -1,0 +1,11 @@
+<!-- This is a basic launch file written in XML code. So from now on this file will be executed when 'roslaunch' command is intiated. Basic review of the file:
+	- The node pkg refers to the ros package which contains the desired node files. It can also open files from different package, even though I have not experimented with that, but I am pretty sure it works.
+	- The type is the name of the node file (e.g joint_node)
+	- The name is a secondary name of the file which kind of acts like a duplicate name to avoid any conflicts between file names.
+	- This launch file belongs in the src/ in the package, typically the launch file has a extension of launch.
+-->
+
+<launch>
+	<node pkg="exoskeleton" type="odrive_exo.py" name="alex" />
+	<node pkg="exoskeleton" type="terminal.py" name="user_interface" />	
+</launch>
