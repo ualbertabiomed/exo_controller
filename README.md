@@ -6,6 +6,16 @@ The controller directory is a catkin package, meant to be uploaded on the contro
 
 ## Development Instructions
 
+### Github setup
+
+Now in Github you must either use a personal access token (PAT) or a SSH key. The SSH key takes a bit more to set up, but it's really convient once it's working. Follow these three steps to set it up:
+
+1. [Generate](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) an SSH key
+2. Add it to your github account
+3. Test the connection
+
+To setup an SSH key, follow [these instructions](
+
 ### Setup
 
 1. Create a [catkin workspace](http://wiki.ros.org/catkin/Tutorials/create_a_workspace) if you don't have one already
