@@ -105,6 +105,10 @@ catkin_package(
 #  DEPENDS system_lib
 )
 
+catkin_install_python(PROGRAMS src/terminal.py src/odrive_exo.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 ###########
 ## Build ##
 ###########
