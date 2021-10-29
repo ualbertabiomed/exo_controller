@@ -1,10 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import time
 import odrive
 from odrive.enums import *
 import odrive.utils
 import math
-from math_conversion import *
+
 import fibre
 import rospy
 from std_msgs.msg import String, Float32

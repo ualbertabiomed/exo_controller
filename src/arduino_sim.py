@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Node for generating data for testing that mimics what would come from the Sensors
 """
