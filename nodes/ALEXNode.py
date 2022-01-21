@@ -33,9 +33,9 @@ class ALEXNode(abc, metaclass=abc.ABCMeta):
 
         topic: the topic to which the new publisher will publish
     """
-    def createPublisher(self, topic):
+    def createPublisher(self, topic, type = String):
         if not topic in publishers
-            publishers[topic] = rospy.Publisher(topic, String)
+            publishers[topic] = rospy.Publisher(topic, type)
 
     """
         publish a message
@@ -58,4 +58,3 @@ class ALEXNode(abc, metaclass=abc.ABCMeta):
     @abstractmethod
     def status(self):
         raise NotImplementedError
-
