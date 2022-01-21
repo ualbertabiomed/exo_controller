@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 from std_msgs.msg import Int32, String
 
@@ -18,7 +18,7 @@ class terminal():
             rospy.loginfo("Type this following strings to execute certain command:\nposition <val>: p<val>\nconfigs<motor/encoder>: f<m/e>\nlimit <vel/cur> <val> = l<v/c><val>\ncalibration<full/user-driven-index> = c <f/u> \nerrors : e\n")
             while not rospy.is_shutdown():
                 #cmd = raw_input(self.main_menu)
-                cmd = raw_input("Enter terminal command: ")
+                cmd = input("Enter terminal command: ")
                 rospy.loginfo(cmd)
                 try:
                     self.pub.publish(cmd)
