@@ -1,11 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import time
 import odrive
 from odrive.enums import *
 import odrive.utils
 import math
-from math_conversion import *
+# from math_conversion import *
 import fibre
+import fibre.libfibre
 import rospy
 from std_msgs.msg import String, Float32
 
@@ -63,11 +64,13 @@ class ODrive_ROS:
         For user control via menu
         """
         while (True):
-            key = raw_input("\n1. Calibrate\n2. Position Control Mode\n3. Velocity Control Mode\n4. Voltage Control Mode\n5. Set Limits\n6. Dump Configs + Errors\nChoose a command (Press a number): ")
+            # key = input("\n1. Calibrate\n2. Position Control Mode\n3. Velocity Control Mode\n4. Voltage Control Mode\n5. Set Limits\n6. Dump Configs + Errors\nChoose a command (Press a number): ")
+            key = input("\n1. Calibrate\n2. Position Control Mode\n3. Velocity Control Mode\n4. Torque Control Mode\n5. Set Limits\n6. Dump Configs + Errors\nChoose a command (Press a number): ")
+
 
             if key == '1':
             # Calibration
-                key = raw_input("\n1. Auto (Don't do this while motor is connect to arm)\n2. User\nChoose a calibration type: ")
+                key = input("\n1. Auto (Don't do this while motor is connect to arm)\n2. User\nChoose a calibration type: ")
                 if key == '1':
                     # Don't do this while connected to arm
                     #self.odrv_ctrl.auto_calibrate(True)
@@ -79,36 +82,46 @@ class ODrive_ROS:
                 key = ''
                 while key != "q":
                     print("Current Position [counts]: " + str(self.odrv_ctrl.get_position()))
-                    key = raw_input("Enter a position or press q to quit: ")
+                    key = input("Enter a position or press q to quit: ")
                     if key != 'q': self.odrv_ctrl.set_position(int(key))
                     # TODO: Possibly add a delay here to give time for motor to spin so position is read correctly on next loop
 
             elif key == '3':
-            # Veclocity Control Mode
+            # Velocity Control Mode
                 key = ''
                 while key != 'q':
                     print("Current Position [counts]: " + str(self.odrv_ctrl.get_position()))
                     print("Current Velocity [counts/s]: " + str(self.odrv_ctrl.get_velocity()))
-                    key = raw_input("Enter a velocity or press q to quit: ")
+                    key = input("Enter a velocity or press q to quit: ")
                     if key != 'q': self.odrv_ctrl.set_velocity(int(key))
                     # TODO: Possibly add a delay here to give time for motor to spin so position is read correctly on next loop
+            
+            # # Voltage Control Mode
+            # elif key == '4':
+            #     # self.odrv_ctrl.set_voltage()
+            #     print("No command")
 
             elif key == '4':
-            # Voltage Control Mode
-                self.odrv_ctrl.set_voltage()
+            # Torque Control Mode
+                key = ''
+                while key != 'q':
+                    key = input("Enter a velocity or press q to quit: ")
+                    if key != 'q': self.odrv_ctrl.set_torque(int(key))
+                    # TODO: Possibly add a delay here to give time for motor to spin so position is read correctly on next loop
+
 
             elif key == '5':
             # Set Limits
                 print("Current Limit: " + str(self.odrv_ctrl.get_current_limit()) + "\nVelocity Limit: " + str(self.odrv_ctrl.get_velocity_limit())),
-                key = raw_input("\n1. Current Limit\n2. Velocity Limit\n3. Abort\nWhich limit would you like to change: ")
+                key = input("\n1. Current Limit\n2. Velocity Limit\n3. Abort\nWhich limit would you like to change: ")
                 if key == '1':
                     # Current
-                    key = raw_input("Enter a new Current Limit: ")
+                    key = input("Enter a new Current Limit: ")
                     self.odrv_ctrl.set_current_limit(int(key))
                     print("New Current Limit: " + str(self.odrv_ctrl.get_current_limit()))
                 elif key == '2':
                     # Velocity
-                    key = raw_input("Enter a new Velocity Limit: ")
+                    key = input("Enter a new Velocity Limit: ")
                     self.odrv_ctrl.set_velocity_limit(int(key))
                     print("New Velocity Limit: " + str(self.odrv_ctrl.get_velocity_limit()))
                 else:
@@ -118,7 +131,7 @@ class ODrive_ROS:
 
             elif key == '6':
             # Dump Configs
-                key = raw_input("Reset Errors? [y/n]: ")
+                key = input("Reset Errors? [y/n]: ")
                 if (key == "y"):
                     self.odrv_ctrl.dump_errors(True)
                 else:
@@ -167,75 +180,81 @@ class ODrive_ctrl:
 
     # Calibration
 
-    def auto_calibrate(self, debug):
-        """
-        Auto Calibration - should only be needed once per life of motor.
-        """
-        ##################Calibration Phase 1 - Set Variables###################
-        '''
-        Based off https://docs.odriverobotics.com/
-        '''
-        print("Reseting Configuration - Recalibration Required")
-        self.odrv.erase_configuration()
-        self.reboot_odrive()
+    # def auto_calibrate(self, debug):
+    #     """
+    #     Auto Calibration - should only be needed once per life of motor.
+    #     """
+    #     ##################Calibration Phase 1 - Set Variables###################
+    #     '''
+    #     Based off https://docs.odriverobotics.com/
+    #     '''
+    #     print("Reseting Configuration - Recalibration Required")
+    #     self.odrv.erase_configuration()
+    #     self.reboot_odrive()
 
-        print("Calibration Phase 1")
-        # These 3 values are the ones we had to change from default, they will
-        # change with different power supplies:
-        #   Garage Power Supply: 3,3,5
-        #   Turnigy ReaktorPro: 10, 10, 3 (Defaults)
-        #
-        self.axis0.motor.config.calibration_current = 10
-        self.axis0.motor.config.current_lim = 10
-        self.axis0.motor.config.resistance_calib_max_voltage = 3
-        self.axis0.controller.config.vel_limit = 20000
+    #     print("Calibration Phase 1")
+    #     # These 3 values are the ones we had to change from default, they will
+    #     # change with different power supplies:
+    #     #   Garage Power Supply: 3,3,5
+    #     #   Turnigy ReaktorPro: 10, 10, 3 (Defaults)
+    #     #
+    #     self.axis0.motor.config.calibration_current = 10
+    #     self.axis0.motor.config.current_lim = 10
+    #     # self.axis0.motor.config.resistance_calib_max_voltage = 3 # Not sure if this is needed
+    #     self.axis0.controller.config.vel_limit = 20000
+    #     self.odrv.config.enable_brake_resistor = True # Set to True if using brake resistor
+    #     self.odrv.config.dc_max_negative_current = -10 # [Amps]
+    #     # self.odrv0.config.max_regen_current = 10 # Not sure if this is needed
 
-        # Display the changed parameters if in debug mode
-        if debug:
-            print("Calibration current set to " + str(self.axis0.motor.config.calibration_current))
-            print("Current limit set to " + str(self.axis0.motor.config.current_lim))
-            print("Resistance_calib_max_voltage set to " + str(self.axis0.motor.config.resistance_calib_max_voltage))
+    #     # Display the changed parameters if in debug mode
+    #     if debug:
+    #         print("Calibration current set to " + str(self.axis0.motor.config.calibration_current))
+    #         print("Current limit set to " + str(self.axis0.motor.config.current_lim))
+    #         print("Resistance_calib_max_voltage set to " + str(self.axis0.motor.config.resistance_calib_max_voltage))
 
-        print("Calibration Phase 1 Complete.")
-        '''
-        At this point setting self.axis0.requested_state = AXIS_STATE_FULL_CALIBRATION_SEQUENCE
-        should make the motor Beep, then spin one direction, then the other.
-        Running dump_errors(odrv0) in the odrivetool should show no errors.
-        '''
+    #     print("Calibration Phase 1 Complete.")
+    #     '''
+    #     At this point setting self.axis0.requested_state = AXIS_STATE_FULL_CALIBRATION_SEQUENCE
+    #     should make the motor Beep, then spin one direction, then the other.
+    #     Running dump_errors(odrv0) in the odrivetool should show no errors.
+    #     '''
 
-        self.set_requested_state(self.axis0, AXIS_STATE_FULL_CALIBRATION_SEQUENCE)
-        time.sleep(20)
+    #     self.set_requested_state(self.axis0, AXIS_STATE_FULL_CALIBRATION_SEQUENCE)
+    #     time.sleep(20)
 
-        #####################Calibration Phase 2 - Encoder######################
-        print("\nPhase 2\n")
-        self.axis0.encoder.config.use_index = True # Done
-        self.set_requested_state(self.axis0, AXIS_STATE_ENCODER_INDEX_SEARCH)
-        time.sleep(10)
-        self.set_requested_state(self.axis0, AXIS_STATE_ENCODER_OFFSET_CALIBRATION) # Error seems to happen here
-        time.sleep(10)
-        #
-        if debug:
-            # Should be 0
-            print("axis.error = " + str(self.axis0.error) + " expected = 0")
-            # Should be some integer, like -326 or 1364
-            print("offset = " + str(self.axis0.encoder.config.offset) + " expected = Integer (+ or -)")
-            # Should be 1 or -1
-            print("direction = " + str(self.axis0.motor.config.direction) + " expected = -1 or +1" )
+    #     #####################Calibration Phase 2 - Encoder######################
+    #     """
+    #     Based off https://docs.odriverobotics.com/encoders
+    #     """
+    #     print("\nPhase 2\n")
+    #     self.axis0.encoder.config.use_index = True # Done
+    #     self.set_requested_state(self.axis0, AXIS_STATE_ENCODER_INDEX_SEARCH)
+    #     time.sleep(10)
+    #     self.set_requested_state(self.axis0, AXIS_STATE_ENCODER_OFFSET_CALIBRATION) # Error seems to happen here
+    #     time.sleep(10)
+    #     #
+    #     if debug:
+    #         # Should be 0
+    #         print("axis.error = " + str(self.axis0.error) + " expected = 0")
+    #         # Should be some integer, like -326 or 1364
+    #         print("offset = " + str(self.axis0.encoder.config.offset) + " expected = Integer (+ or -)")
+    #         # Should be 1 or -1
+    #         print("direction = " + str(self.axis0.motor.config.direction) + " expected = -1 or +1" )
 
-        print("Setting encoder and motor pre-calibrated flags to True...The variable printed below should be true if the odrive agrees calibration worked")
-        self.axis0.encoder.config.pre_calibrated = True
-        self.axis0.motor.config.pre_calibrated = True
-        # Search for an index at startup, i.e. encoder should spin and stop at the same position
-        self.axis0.config.startup_encoder_index_search = False
-        print("self.axis0.encoder.config.pre_calibrated = ")
-        print(self.axis0.encoder.config.pre_calibrated)
+    #     print("Setting encoder and motor pre-calibrated flags to True...The variable printed below should be true if the odrive agrees calibration worked")
+    #     self.axis0.encoder.config.pre_calibrated = True
+    #     self.axis0.motor.config.pre_calibrated = True
+    #     # Search for an index at startup, i.e. encoder should spin and stop at the same position
+    #     self.axis0.config.startup_encoder_index_search = False
+    #     print("self.axis0.encoder.config.pre_calibrated = ")
+    #     print(self.axis0.encoder.config.pre_calibrated)
 
-        if self.axis0.encoder.config.pre_calibrated:
-            self.odrv.save_configuration()
-            self.reboot_odrive()
-            print("Done full calibration sequence - successful")
-        else:
-            print("Done full calibration sequence - not successful")
+    #     if self.axis0.encoder.config.pre_calibrated:
+    #         self.odrv.save_configuration()
+    #         self.reboot_odrive()
+    #         print("Done full calibration sequence - successful")
+    #     else:
+    #         print("Done full calibration sequence - not successful")
 
     def user_calibrate(self):
         """
@@ -252,16 +271,27 @@ class ODrive_ctrl:
         #   Garage Power Supply: 3,3,5
         #   Turnigy ReaktorPro: 10, 10, 3 (Defaults)
         #   https://docs.google.com/spreadsheets/d/12vzz7XVEK6YNIOqH0jAz51F5VUpc-lJEs3mmkWP1H4Y/edit#gid=0 --> Motor limits
-        self.axis0.motor.config.calibration_current = 10
-        self.axis0.motor.config.current_lim = 68 # From above link
-        self.axis0.motor.config.resistance_calib_max_voltage = 3
-        self.axis0.controller.config.vel_limit = 50000 # counts/s
-        self.odrv.save_configuration()
-        self.reboot_odrive()
-        print("\nIndex Values Before: " + str(self.axis0.encoder.is_ready) + " " + str(self.axis0.encoder.index_found))
-        print("Delaying 10 seconds for manual calibration movement")
-        time.sleep(10)
-        print("\nIndex Values After: " + str(self.axis0.encoder.is_ready) + " " + str(self.axis0.encoder.index_found))
+
+        # self.axis0.motor.config.current_lim = 68 # From above link
+        # self.axis0.controller.config.vel_limit = 50000 # counts/s
+        self.odrv.config.enable_brake_resistor = True # Set to True if using brake resistor
+        self.odrv.config.dc_max_negative_current = -10 # [Amps]
+
+        # self.axis0.motor.config.calibration_current = 10 // Not sure if this is needed
+        # self.odrv0.config.max_regen_current = 10 # Not sure if this is needed
+        # self.axis0.motor.config.resistance_calib_max_voltage = 3 # Not sure if this is needed
+
+        try:
+            self.odrv.save_configuration()
+            print("\nIndex Values Before: " + str(self.axis0.encoder.is_ready) + " " + str(self.axis0.encoder.index_found))
+            print("Delaying 10 seconds for manual calibration movement")
+            time.sleep(10)
+            print("\nIndex Values After: " + str(self.axis0.encoder.is_ready) + " " + str(self.axis0.encoder.index_found))
+        except fibre.libfibre.ObjectLostError:
+            self.connect()
+
+        self.set_requested_state(self.axis0, AXIS_STATE_FULL_CALIBRATION_SEQUENCE)
+        time.sleep(20)
 
     # Getters
 
@@ -281,19 +311,33 @@ class ODrive_ctrl:
 
     def set_control_mode(self, axis, mode):
         """
+        ---------- Outdated ----------
+
         CTRL_MODE_VOLTAGE_CONTROL = 0
         CTRL_MODE_CURRENT_CONTROL = 1
         CTRL_MODE_VELOCITY_CONTROL = 2
         CTRL_MODE_POSITION_CONTROL = 3
         CTRL_MODE_TRAJECTORY_CONTROL = 4
         """
-        if mode in range(6):
+
+        """
+        https://docs.odriverobotics.com/commands.html
+        https://docs.odriverobotics.com/api/odrive.controller.controlmode
+
+        CONTROL_MODE_VOLTAGE_CONTROL = 0 (this one is not normally used)
+        CONTROL_MODE_TORQUE_CONTROL = 1
+        CONTROL_MODE_VELOCITY_CONTROL = 2
+        CONTROL_MODE_POSITION_CONTROL = 3
+        """
+        if mode in range(4):
             axis.controller.config.control_mode = mode
         else:
             print("Error: Invalid control mode")
 
     def set_requested_state(self, axis, state):
         """
+        https://docs.odriverobotics.com/api/odrive.axis.axisstate
+
         AXIS_STATE_UNDEFINED = 0
         AXIS_STATE_IDLE = 1
         AXIS_STATE_STARTUP_SEQUENCE = 2
@@ -312,31 +356,58 @@ class ODrive_ctrl:
             print("Error: Invalid requested state")
 
     def set_position(self, position):
-        self.set_requested_state(self.axis0, AXIS_STATE_CLOSED_LOOP_CONTROL)
-        self.axis0.controller.config.control_mode = CTRL_MODE_POSITION_CONTROL
-        self.axis0.controller.pos_setpoint = position # [counts]
-        print("Set position to: " + str(position) + " encoder units")
-
-    def set_velocity(self, velocity):
-        self.set_requested_state(self.axis0, AXIS_STATE_CLOSED_LOOP_CONTROL)
-        self.axis0.controller.config.control_mode = CTRL_MODE_VELOCITY_CONTROL
-        self.axis0.controller.vel_setpoint = velocity # [counts/sec]
-        print("Set Velocity to: " + str(velocity) + "counts/s (Non-Ramped)")
-
-    def set_current(self, current):
-        # Set the current, proportional to torque
-        # NOTE: There is no velocity limiting in current control mode, make
-        # sure to not overrev the motor or exceed max speed for encode.
-        if (current >= 0 and current <= 68):
+        try:
             self.set_requested_state(self.axis0, AXIS_STATE_CLOSED_LOOP_CONTROL)
-            self.axis0.controller.config.control_mode = CTRL_MODE_CURRENT_CONTROL
-            self.axis0.controller.current_setpoint = current
-        else:
-            print("Current outside motor limits")
+            # Outdated: self.axis0.controller.config.control_mode = CTRL_MODE_POSITION_CONTROL
+            self.axis0.controller.config.control_mode = CONTROL_MODE_POSITION_CONTROL
+            # Outdated: self.axis0.controller.pos_setpoint = position # [counts]
+            # <axis>.controller.input_pos = <turn>
+            self.axis0.controller.input_pos = position
+            # print("Set position to: " + str(position) + " encoder units")
+            print("Set position to: " + str(position) + " turns")
+        except:
+            pass
+
+    
+    def set_velocity(self, velocity):
+        try:
+            self.set_requested_state(self.axis0, AXIS_STATE_CLOSED_LOOP_CONTROL)
+            # Outdated: self.axis0.controller.config.control_mode = CTRL_MODE_VELOCITY_CONTROL
+            self.axis0.controller.config.control_mode = CONTROL_MODE_VELOCITY_CONTROL
+            # Outdated: self.axis0.controller.vel_setpoint = velocity # [counts/sec]
+            # <axis>.controller.input_vel = <turn/s>
+            self.axis0.controller.input_vel = velocity
+            # print("Set Velocity to: " + str(velocity) + "counts/s (Non-Ramped)")
+            print("Set velocity to: " + str(velocity) + " turn/s")
+        except:
+            pass
+
+    def set_torque(self, torque):
+        try:
+            self.set_requested_state(self.axis0, AXIS_STATE_CLOSED_LOOP_CONTROL)
+            self.axis0.controller.config.control_mode = CONTROL_MODE_TORQUE_CONTROL
+            # <axis>.controller.input_torque = <torque in Nm>
+            self.axis0.controller.input_vel = torque
+            print("Set torque to: " + str(torque) + " torque in Nm")
+        except:
+            pass
+
+    """
+    def set_current(self, current):
+    # Set the current, proportional to torque
+    # NOTE: There is no velocity limiting in current control mode, make
+    # sure to not overrev the motor or exceed max speed for encode.
+    if (current >= 0 and current <= 68):
+        self.set_requested_state(self.axis0, AXIS_STATE_CLOSED_LOOP_CONTROL)
+        self.axis0.controller.config.control_mode = CTRL_MODE_CURRENT_CONTROL
+        self.axis0.controller.current_setpoint = current
+    else:
+        print("Current outside motor limits")
 
     def set_voltage(self):
         self.set_requested_state(self.axis0, AXIS_STATE_CLOSED_LOOP_CONTROL)
         self.axis0.controller.config.control_mode = CTRL_MODE_VOLTAGE_CONTROL
+    """
 
     def set_current_limit(self, new_current_lim):
         self.axis0.motor.config.current_lim = new_current_lim
