@@ -78,7 +78,7 @@ After pushing some changes, open a pull request to merge into main and ask someo
 
 Try to follow [this](http://wiki.ros.org/PyStyleGuide) style guide 
 
-Valid Names
+# Valid Names
 Package Resource Names have strict naming rules as they are often used in auto-generated code. For this reason, a ROS package cannot have special characters other than an underscore, and they must start with an alphabetical character. A valid name has the following characteristics:
 1. First character is an alpha character ([a-z|A-Z])
 2. Subsequent characters can be alphanumeric ([0-9|a-z|A-Z]), underscores (_) or a forward slash (/)
